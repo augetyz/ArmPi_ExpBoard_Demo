@@ -34,44 +34,25 @@ int main(int argc, char* argv[])
     timer_t t1;
     bool value;
     /*************** 设备初始化 ***************/
-    bsp_gpio_init();
-    bsp_serial_init();
-    ws2812_init(3);
     st7789_basic_init();
     st7789_basic_clear();
     sleep(1);
     timer_start(1000, lvgl_tick, &t1);
 
     /**************** 逻辑代码 ****************/
-    ws2812_SetRGB(2, rgb(0x0D, 0x0E, 0x00));
-    ws2812_SetRGB(1, rgb(0x00, 0x0F, 0x0F));
-    ws2812_SetRGB(0, rgb(0x0D, 0x00, 0x0E));
-
     st7789_basic_clear();
     st7789_basic_string(20, 20, "Hello world", 12, 0X03E0, ST7789_FONT_16);
 
     lv_init();                   /* lvgl系统初始化 */
     lv_port_disp_init();         /* lvgl显示接口初始化,放在lv_init()的后面 */
-    // lv_demo_stress();
-    // lv_demo_benchmark();
     sleep(1);
     setup_ui(&guider_ui);
     events_init(&guider_ui);
-    status_timer = lv_timer_create(update_status_cb, 1000, &guider_ui);
+    status_timer = lv_timer_create(update_status_cb, 500, &guider_ui);
     while (1)
     {
-        if (KeyRead(1) == 0)
-        {
-            printf("Key1 pressed\n");
-        }
-        if (KeyRead(2) == 0)
-        {
-            printf("Key2 pressed\n");
-        }
         usleep(10 * 1000);
     }
-    bsp_deinit();
-    ws2812_deinit();
     st7789_basic_deinit();
     return 0;
 }
@@ -82,7 +63,7 @@ static void update_status_cb(lv_timer_t* timer)
 
     // 1. 网络状态 & 图标
     bool eth_up = sysmon_iface_up("eth0");
-    bool wifi_up = sysmon_iface_up("wlan0");
+    bool wifi_up = sysmon_iface_up("wlP4p65s0");
     if (eth_up == 1 || wifi_up == 1)
     {
         // 已连接
@@ -113,8 +94,8 @@ static void update_status_cb(lv_timer_t* timer)
 
     // 4. 网速 label_3/upload, label_4/download
     float down, up;
-    // 你可以根据实际优先接口决定是 eth0 还是 wlan0
-    sysmon_get_net_speed(eth_up ? "eth0" : "wlan0", &down, &up);
+    // 你可以根据实际优先接口决定是 eth0 还是 wlP4p65s0
+    sysmon_get_net_speed(eth_up ? "eth0" : "wlP4p65s0", &down, &up);
     char buf3[32], buf4[32];
     snprintf(buf3, sizeof(buf3), "%.1f KB/s", up);
     snprintf(buf4, sizeof(buf4), "%.1f KB/s", down);
@@ -146,7 +127,7 @@ static void update_status_cb(lv_timer_t* timer)
         show_eth = !show_eth;
         if (show_eth && sysmon_get_ip("eth0", ipbuf, sizeof(ipbuf)))
             lv_label_set_text(ui->screen_label_7, ipbuf);
-        else if (!show_eth && sysmon_get_ip("wlan0", ipbuf, sizeof(ipbuf)))
+        else if (!show_eth && sysmon_get_ip("wlP4p65s0", ipbuf, sizeof(ipbuf)))
             lv_label_set_text(ui->screen_label_7, ipbuf);
     }
     else if (eth_up)
@@ -156,7 +137,7 @@ static void update_status_cb(lv_timer_t* timer)
     }
     else if (wifi_up)
     {
-        if (sysmon_get_ip("wlan0", ipbuf, sizeof(ipbuf)))
+        if (sysmon_get_ip("wlP4p65s0", ipbuf, sizeof(ipbuf)))
             lv_label_set_text(ui->screen_label_7, ipbuf);
     }
     else
